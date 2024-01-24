@@ -1,12 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using PGGE.Patterns;
 using Photon.Pun;
 
 public class Player_Multiplayer : MonoBehaviour
 {
     private PhotonView mPhotonView;
+    public Text bulletCountText;
 
     [HideInInspector]
     public FSM mFsm = new FSM();
@@ -56,6 +58,7 @@ public class Player_Multiplayer : MonoBehaviour
     void Update()
     {
         if (!mPhotonView.IsMine) return;
+        UpdateBulletCountText();
 
         mFsm.Update();
         Aim();
@@ -210,6 +213,17 @@ public class Player_Multiplayer : MonoBehaviour
             Quaternion.LookRotation(dir) * Quaternion.AngleAxis(90.0f, Vector3.right));
 
         bullet.GetComponent<Rigidbody>().AddForce(dir * mBulletSpeed, ForceMode.Impulse);
+
+        // Update remaining bullet count text
+        UpdateBulletCountText();
+    }
+
+    void UpdateBulletCountText()
+    {
+        if (bulletCountText != null)
+        {
+            bulletCountText.text = "" + mBulletsInMagazine.ToString();
+        }
     }
 
     IEnumerator Coroutine_Firing(int id)
