@@ -7,6 +7,7 @@ public class BackToMenu : MonoBehaviour
 {
     public void GoToMenu()
     {
-        SceneManager.LoadScene("Menu"); // This way if we need, we can use it for Singleplayer too
+        SceneManager.LoadScene("Menu");  
+        // When this method is called, it loads the 'Menu' scene 
     }
 }

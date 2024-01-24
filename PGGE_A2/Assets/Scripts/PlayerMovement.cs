@@ -5,11 +5,13 @@ using PGGE;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [HideInInspector]
+    //[HideInInspector] 
+    //Errors occured such as null CharacterController when hiding
     public CharacterController mCharacterController;
     public Animator mAnimator;
-     
-    // Refactor Change 2 - Changed public variables to private and use SerializeField instead
+
+    //Refactor 1
+    //Changed public variables to private and use SerializeField instead
     [SerializeField]
     private float mWalkSpeed = 1.5f;
 
@@ -34,55 +36,67 @@ public class PlayerMovement : MonoBehaviour
 
     private float hInput;
     private float vInput;
-    private float speed; 
-
+    private float speed;
     private bool jump = false;
-    private bool crouch = false;  
+    private bool crouch = false;
 
-    private PlayerJump jumpComponent;
-    private PlayerGravity gravityComponent;
-
-    public Vector3 mVelocity = new Vector3(0.0f, 0.0f, 0.0f); // Made it public so other classes can access it
-
-    
+    private Vector3 mVelocity = new Vector3(0.0f, 0.0f, 0.0f);
 
     void Start()
     {
         mCharacterController = GetComponent<CharacterController>();
-        jumpComponent = GetComponent<PlayerJump>();
-        gravityComponent = GetComponent<PlayerGravity>();
     }
 
-    void Update()
-    {
-        //HandleInputs();
-        //Move(); 
-    }
+    //Refactor 2 
+    //Removed unused methods
 
-    private void FixedUpdate()
-    {
-        //ApplyGravity();
-    }
+    //void Update()
+    //{
+    //    //HandleInputs();
+    //    //Move();
+    //}
 
+    //private void FixedUpdate()
+    //{
+    //    //ApplyGravity();
+    //}
+
+    //Refactor 3
     public void HandleInputs()
     {
-        // We shall handle our inputs here.
+        //Separated inputs into respective methods
+        MovementInput();
+        SpeedInput();
+        JumpInput();
+        CrouchInput();
+    }
+
+    //MovementInput handles the inputs separately from the previous HandleInputs method
+    private void MovementInput()
+    {
 #if UNITY_STANDALONE
         hInput = Input.GetAxis("Horizontal");
         vInput = Input.GetAxis("Vertical");
 #endif
 
 #if UNITY_ANDROID
-        hInput = 2.0f * mJoystick.Horizontal;
-        vInput = 2.0f * mJoystick.Vertical;
+    hInput = 2.0f * mJoystick.Horizontal;
+    vInput = 2.0f * mJoystick.Vertical;
 #endif
+    }
 
+    //Did the same for previous methods below
+    private void SpeedInput()
+    {
         speed = mWalkSpeed;
         if (Input.GetKey(KeyCode.LeftShift))
         {
             speed = mWalkSpeed * 2.0f;
         }
+    }
 
+    private void JumpInput()
+    {
         if (Input.GetKeyDown(KeyCode.Space))
         {
             jump = true;
@@ -92,106 +106,119 @@ public class PlayerMovement : MonoBehaviour
         {
             jump = false;
         }
+    }
 
+    private void CrouchInput()
+    {
         if (Input.GetKeyDown(KeyCode.Tab))
         {
-            crouch = !crouch;
-            Crouch();
+            ToggleCrouch();
         }
+    }
+
+    //Separated the toggle crouch into this method to be handled individually 
+    //Rather than using HandleInputs to handle everything
+    private void ToggleCrouch()
+    {
+        crouch = !crouch;
+        Crouch();
     }
 
     public void Move()
     {
         if (crouch) return;
 
-        // We shall apply movement to the game object here.
+        //Created methods to handle different parts of the Move script
+        RotatePlayer();
+        Movement();
+        UpdateAnimator();
+
+        if (jump)
+        {
+            Jump();
+            jump = false;
+        }
+
+        ApplyGravity();
+    }
+
+    //Method handles player rotation based on their input
+    private void RotatePlayer()
+    {
         if (mAnimator == null) return;
+
         if (mFollowCameraForward)
         {
-            // rotate Player towards the camera forward.
-            Vector3 eu = Camera.main.transform.rotation.eulerAngles;
-            transform.rotation = Quaternion.RotateTowards(
-                transform.rotation,
-                Quaternion.Euler(0.0f, eu.y, 0.0f),
-                mTurnRate * Time.deltaTime);
+            RotateTowardsCameraForward();
         }
         else
         {
             transform.Rotate(0.0f, hInput * mRotationSpeed * Time.deltaTime, 0.0f);
         }
+    }
 
+    //Rotates player towards camera forward
+    private void RotateTowardsCameraForward()
+    {
+        Vector3 eu = Camera.main.transform.rotation.eulerAngles;
+        transform.rotation = Quaternion.RotateTowards(
+            transform.rotation,
+            Quaternion.Euler(0.0f, eu.y, 0.0f),
+            mTurnRate * Time.deltaTime);
+    }
+
+    //Applies movement to player
+    private void Movement()
+    {
         Vector3 forward = transform.TransformDirection(Vector3.forward).normalized;
         forward.y = 0.0f;
 
         mCharacterController.Move(forward * vInput * speed * Time.deltaTime);
-        mAnimator.SetFloat("PosX", 0);
-        mAnimator.SetFloat("PosZ", vInput * speed / (2.0f * mWalkSpeed));
-
-        if (jump)
-        {
-            jumpComponent.Jump();
-            jump = false;
-        }
-        gravityComponent.ApplyGravity();
     }
 
-    private Vector3 HalfHeight;
-    private Vector3 tempHeight; 
+    //Handles the animations for movement
+    private void UpdateAnimator()
+    {
+        mAnimator.SetFloat("PosX", 0);
+        mAnimator.SetFloat("PosZ", vInput * speed / (2.0f * mWalkSpeed));
+    }
 
-    void Crouch()
+    //Everything else remains the same
+    private void Jump()
+    {
+        mAnimator.SetTrigger("Jump");
+        mVelocity.y += Mathf.Sqrt(mJumpHeight * -2f * mGravity);
+    }
+
+    private Vector3 halfHeight;
+    private Vector3 tempHeight;
+
+    private void Crouch()
     {
         mAnimator.SetBool("Crouch", crouch);
+
         if (crouch)
         {
             tempHeight = CameraConstants.CameraPositionOffset;
-            HalfHeight = tempHeight;
-            HalfHeight.y *= 0.5f;
-            CameraConstants.CameraPositionOffset = HalfHeight;
+            halfHeight = tempHeight * 0.5f;
+            CameraConstants.CameraPositionOffset = halfHeight;
         }
         else
         {
             CameraConstants.CameraPositionOffset = tempHeight;
         }
     }
-}
 
-// Refactor Change 1 - 'Separation of Concerns' for my Jump function
-public class PlayerJump : MonoBehaviour
-{
-    private PlayerMovement movementController;
-
-    private void Start()
+    private void ApplyGravity()
     {
-        movementController = GetComponent<PlayerMovement>();
+        mVelocity.x = 0.0f;
+        mVelocity.z = 0.0f;
+
+        mVelocity.y += mGravity * Time.deltaTime;
+        mCharacterController.Move(mVelocity * Time.deltaTime);
+
+        if (mCharacterController.isGrounded && mVelocity.y < 0)
+            mVelocity.y = 0f;
     }
 
-    public void Jump()
-    {
-        movementController.mAnimator.SetTrigger("Jump");
-        movementController.mVelocity.y += Mathf.Sqrt(movementController.mJumpHeight * -2f * movementController.mGravity);
-    }
-}
-
-// Refactor Change 3 - 'Separation of Concerns' for my ApplyGravity function
-public class PlayerGravity : MonoBehaviour
-{
-    private PlayerMovement movementController;
-
-    private void Start()
-    {
-        movementController = GetComponent<PlayerMovement>();
-    }
-     
-    public void ApplyGravity()
-    {
-        // apply gravity.
-        movementController.mVelocity.x = 0.0f;
-        movementController.mVelocity.z = 0.0f;
-
-        movementController.mVelocity.y += movementController.mGravity * Time.deltaTime;
-        movementController.mCharacterController.Move(movementController.mVelocity * Time.deltaTime); 
-
-        if (movementController.mCharacterController.isGrounded && movementController.mVelocity.y < 0)
-            movementController.mVelocity.y = 0f;
-    }
 }
