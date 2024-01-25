@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using PGGE;
 
 public class PlayerMovement : MonoBehaviour
@@ -25,10 +26,17 @@ public class PlayerMovement : MonoBehaviour
     private float mTurnRate = 10.0f;
 
     [SerializeField]
-    public float mGravity = -30.0f;
+    private float mGravity = -30.0f;
 
     [SerializeField]
-    public float mJumpHeight = 1.0f;
+    private float mJumpHeight = 1.0f;
+     
+    //Stamina implementation
+    public Image energyBar;
+    public float energy, maxEnergy;
+    public float movementEnergy;
+    public float rechargeEnergyRate;
+    private Coroutine rechargeEnergy;
 
 #if UNITY_ANDROID
     public FixedJoystick mJoystick;
@@ -88,10 +96,35 @@ public class PlayerMovement : MonoBehaviour
     //Did the same for previous methods below
     private void SpeedInput()
     {
-        speed = mWalkSpeed;
+        speed = mWalkSpeed; 
+
         if (Input.GetKey(KeyCode.LeftShift))
         {
             speed = mWalkSpeed * 2.0f;
+
+            //Handles player stamina and updates UI accordingly
+            energy -= movementEnergy * Time.deltaTime;
+            if (energy < 0) energy = 0;
+            energyBar.fillAmount = energy / maxEnergy;
+
+            if (rechargeEnergy != null) StopCoroutine(rechargeEnergy);
+            rechargeEnergy = StartCoroutine(EnergyRecharge());
+        }
+    }
+     
+    //Handles player energy recharge
+    private IEnumerator EnergyRecharge()
+    {
+        yield return new WaitForSeconds(1.0f);
+
+        while (energy < maxEnergy)
+        {
+            energy += rechargeEnergyRate / 10.0f; 
+
+            if (energy > maxEnergy) energy = maxEnergy; 
+
+            energyBar.fillAmount = energy / maxEnergy;
+            yield return new WaitForSeconds(1.0f);
         }
     }
 

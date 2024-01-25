@@ -13,7 +13,7 @@ public class PlayerUsername : MonoBehaviourPunCallbacks
         playerUsernameText = GetComponent<Text>();
         if (playerUsernameText == null)
         {
-            Debug.LogError("PlayerUsernameText component not found on the object.");
+            Debug.LogError("PlayerUsernameText component not found.");
         }
 
         //Calls function to set the player's username
@@ -21,15 +21,19 @@ public class PlayerUsername : MonoBehaviourPunCallbacks
     }
 
     public void SetPlayerUsername()
-    {
-        //Gets preferred player username from PlayerPrefs
-        //PlayerPrefs holds player preferences
-        string playerName = PlayerPrefs.GetString("PlayerName");
+    { 
+        if (photonView.IsMine)
+        {
+            //Gets preferred player username from PlayerPrefs
+            //PlayerPrefs holds player preferences
+            string playerName = PlayerPrefs.GetString("PlayerName");
 
-        //Updates player username 
-        UpdatePlayerUsernameText(playerName);
+            //Updates player username 
+            UpdatePlayerUsernameText(playerName);
+        }
     }
 
+    [PunRPC]
     public void UpdatePlayerUsernameText(string playerName)
     {
         if (playerUsernameText != null)

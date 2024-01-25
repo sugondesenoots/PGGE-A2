@@ -25,7 +25,7 @@ public class Bullet : MonoBehaviour
         IDamageable obj = collision.gameObject.GetComponent<IDamageable>();
         if (obj != null)
         {
-            obj.TakeDamage();
+            obj.TakeDamage(10);
         }
 
         StartCoroutine(Coroutine_Destroy(0.1f));

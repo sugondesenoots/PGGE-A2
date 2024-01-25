@@ -35,7 +35,7 @@ namespace PGGE
             // Start is called before the first frame update
             void Start()
             {
-                mConnectionProgress.SetActive(false);
+                mConnectionProgress.SetActive(false); 
             }
 
             public void Connect()

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using PGGE.Patterns;
 using Photon.Pun;
+using System;
 
 public class Player_Multiplayer : MonoBehaviour
 {
@@ -34,7 +35,7 @@ public class Player_Multiplayer : MonoBehaviour
     public Transform mGunTransform;
     public LayerMask mPlayerMask;
     public Canvas mCanvas;
-    public RectTransform mCrossHair;
+    //public RectTransform mCrossHair;
 
 
     public GameObject mBulletPrefab;
@@ -52,7 +53,7 @@ public class Player_Multiplayer : MonoBehaviour
         mFsm.Add(new PlayerState_Multiplayer_MOVEMENT(this));
         mFsm.Add(new PlayerState_Multiplayer_ATTACK(this));
         mFsm.Add(new PlayerState_Multiplayer_RELOAD(this));
-        mFsm.SetCurrentState((int)PlayerStateType.MOVEMENT);
+        mFsm.SetCurrentState((int)PlayerStateType.MOVEMENT); 
     }
 
     void Update()
@@ -163,16 +164,16 @@ public class Player_Multiplayer : MonoBehaviour
             ((ViewportPosition.y * CanvasRect.sizeDelta.y) - (CanvasRect.sizeDelta.y * 0.5f)));
 
             //now you can set the position of the UI element
-            mCrossHair.anchoredPosition = WorldObject_ScreenPosition;
+            //mCrossHair.anchoredPosition = WorldObject_ScreenPosition;
 
 
             // Enable or set active the crosshair gameobject.
-            mCrossHair.gameObject.SetActive(true);
+            //mCrossHair.gameObject.SetActive(true);
         }
         else
         {
             // Hide or set inactive the crosshair gameobject.
-            mCrossHair.gameObject.SetActive(false);
+            //mCrossHair.gameObject.SetActive(false);
         }
     }
 
@@ -181,7 +182,7 @@ public class Player_Multiplayer : MonoBehaviour
         if (!mPhotonView.IsMine) return;
 
         mPlayerMovement.HandleInputs();
-        mPlayerMovement.Move();
+        mPlayerMovement.Move(); 
     }
 
     public void NoAmmo()
@@ -200,7 +201,7 @@ public class Player_Multiplayer : MonoBehaviour
         {
             StartCoroutine(Coroutine_Firing(id));
         }
-    }
+     }
 
     public void FireBullet()
     {
@@ -214,10 +215,11 @@ public class Player_Multiplayer : MonoBehaviour
 
         bullet.GetComponent<Rigidbody>().AddForce(dir * mBulletSpeed, ForceMode.Impulse);
 
-        // Update remaining bullet count text
+        //Updates bullet count text
         UpdateBulletCountText();
     }
 
+    //Updates UI text for bullet count
     void UpdateBulletCountText()
     {
         if (bulletCountText != null)

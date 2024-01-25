@@ -14,6 +14,8 @@ public class PlayerManager : MonoBehaviourPunCallbacks
     [HideInInspector]
     private ThirdPersonCamera mThirdPersonCamera;
 
+    
+
     private void Start()
     {
         Transform randomSpawnTransform = mSpawnPoints.GetSpawnPoint();
